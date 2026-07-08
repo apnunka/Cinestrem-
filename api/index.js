@@ -7,41 +7,37 @@ module.exports = async (req, res) => {
     // 1. Hands Nuvio the Manifest
     if (req.url.includes('/manifest.json')) {
         return res.json({
-            id: 'org.myaddon.cinestream.native',
-            version: '2.0.0',
-            name: 'CineStream Pro',
-            description: 'Native Streams (FlixHQ, VidSrc, ZoeChip, etc.)',
+            id: 'org.myaddon.cinestream.ultimate',
+            version: '3.0.0',
+            name: 'CineStream Ultimate',
+            description: 'Native Streams (Cloudflare Bypassed)',
             resources: ['stream'],
             types: ['movie', 'series'],
             idPrefixes: ['tt']
         });
     }
 
-    // 2. Intercepts the Nuvio request and fetches raw links
+    // 2. The API Hijack Router
     if (req.url.includes('/stream/')) {
-        const path = req.url.split('/stream/')[1]; // Extracts "movie/tt1234567.json"
+        const path = req.url.split('/stream/')[1]; 
         
         try {
-            // We route the request through a heavy-duty community API (like Superflix/Stremify) 
-            // that already has the Cloudflare bypasses for your requested sources.
-            const { data } = await axios.get(`https://stremify.elfhosted.com/stream/${path}`, {
-                timeout: 8000 // Vercel free tier limit protection
+            // We ping an open-source HTTP Stremio aggregator that already has the bypasses running 24/7
+            const { data } = await axios.get(`https://flix-streams.vercel.app/stream/${path}`, {
+                timeout: 8000 
             });
             
-            // Re-brand the scraped links to your custom addon name
+            // Re-brand the extracted, unlocked raw links as your own
             if (data && data.streams) {
                 data.streams = data.streams.map(stream => {
-                    // This keeps the original source name (like "FlixHQ" or "VidSrc") but tags it to CineStream
-                    const sourceName = stream.name || 'Web';
                     stream.name = 'CineStream';
-                    stream.title = `${sourceName} | ${stream.title || 'Native 1080p'}\nDirect Server`;
+                    stream.title = `Direct Native | ${stream.title || '1080p'}`;
                     return stream;
                 });
             }
-            return res.json(data);
+            return res.json(data || { streams: [] });
             
         } catch (error) {
-            // If the primary scraper fails, return an empty array so Nuvio doesn't crash
             return res.json({ streams: [] });
         }
     }
