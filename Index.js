@@ -1,10 +1,10 @@
-const { addonBuilder, serveHTTP } = require('stremio-addon-sdk');
+const { addonBuilder, getRouter } = require('stremio-addon-sdk');
 const axios = require('axios');
 
 const manifest = {
     id: 'org.myaddon.cinestream',
     version: '1.0.0',
-    name: 'CineStream iPhone Build',
+    name: 'CineStream Vercel Build',
     description: 'Direct HTTP Web Streams for Nuvio TV',
     resources: ['stream'],
     types: ['movie'],
@@ -16,11 +16,8 @@ const builder = new addonBuilder(manifest);
 builder.defineStreamHandler(async ({ type, id }) => {
     if (type === 'movie' && id.startsWith('tt')) {
         try {
-            // Fetches the movie name using Stremio's official metadata engine
             const metaRes = await axios.get(`https://v3-cinemeta.strem.io/meta/movie/${id}.json`);
             const title = metaRes.data.meta.name;
-
-            // Direct HTTP embed player link
             const embedUrl = `https://vidsrc.me/embed/movie?imdb=${id}`;
 
             return {
@@ -39,4 +36,4 @@ builder.defineStreamHandler(async ({ type, id }) => {
     return { streams: [] };
 });
 
-serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
+module.exports = getRouter(builder.getInterface());
