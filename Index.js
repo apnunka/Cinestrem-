@@ -1,4 +1,5 @@
 const { addonBuilder, getRouter } = require('stremio-addon-sdk');
+const express = require('express');
 const axios = require('axios');
 
 const manifest = {
@@ -36,4 +37,6 @@ builder.defineStreamHandler(async ({ type, id }) => {
     return { streams: [] };
 });
 
-module.exports = getRouter(builder.getInterface());
+const app = express();
+app.use('/', getRouter(builder.getInterface()));
+module.exports = app;
